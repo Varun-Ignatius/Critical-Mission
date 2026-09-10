@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mission Control // Classified</title>
+
+    <style>
+        :root {
+            --navy: #111827;
+            --navy2: #1b2435;
+            --cream: #fff8ed;
+            --peach: #f6b89c;
+            --rose: #e89a9a;
+            --matcha: #a8c686;
+            --gold: #e7c873;
+            --text: #263142;
+            --muted: #737b87;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                Roboto, Helvetica, Arial, sans-serif;
+
+            background: var(--navy);
+            color: white;
+
+            overflow-x: hidden;
+        }
+
+        button {
+            font: inherit;
+            cursor: pointer;
+        }
+
+        /* -----------------------------
+   GLOBAL SCREEN
+----------------------------- */
+
+        .screen {
+            position: fixed;
+            inset: 0;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 25px;
+
+            opacity: 0;
+            pointer-events: none;
+
+            transform: translateY(20px);
+
+            transition:
+                opacity .6s ease,
+                transform .6s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* -----------------------------
+   INTRO
+----------------------------- */
+
+        #intro {
+            background:
+                radial-gradient(circle at 50% 40%,
+                    rgba(246, 184, 156, .15),
+                    transparent 40%),
+                var(--navy);
+        }
+
+        .intro-box {
+            width: min(600px, 100%);
+            text-align: center;
+        }
+
+        .classified {
+            font-size: 12px;
+            letter-spacing: 5px;
+            color: var(--peach);
+            margin-bottom: 35px;
+            animation: pulse 2s infinite;
+        }
+
+        .mission-icon {
+            font-size: 70px;
+            margin-bottom: 25px;
+
+            animation:
+                float 3s ease-in-out infinite;
+        }
+
+        h1 {
+            font-size: clamp(35px, 8vw, 65px);
+            line-height: 1.05;
+            margin-bottom: 20px;
+        }
+
+        .intro-sub {
+            color: #aeb5c1;
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 15px 30px;
+
+            font-weight: 700;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .primary {
+            background: var(--peach);
+            color: var(--navy);
+
+            box-shadow:
+                0 10px 30px rgba(246, 184, 156, .2);
+        }
+
+        .secondary {
+            background: transparent;
+            color: var(--text);
+
+            border: 1px solid #d9d2c7;
+        }
+
+        /* -----------------------------
+   MAIN APP
+----------------------------- */
+
+        .app {
+            background: var(--cream);
+            color: var(--text);
+
+            overflow-y: auto;
+        }
+
+        .content {
+            width: min(620px, 100%);
+            text-align: center;
+        }
+
+        .mission-number {
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: clamp(32px, 7vw, 52px);
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 35px;
+        }
+
+        /* -----------------------------
+   MISSION CARD
+----------------------------- */
+
+        .card {
+            background: white;
+
+            border-radius: 25px;
+
+            padding: 30px;
+
+            box-shadow:
+                0 15px 45px rgba(38, 49, 66, .08);
+
+            margin-bottom: 25px;
+
+            text-align: left;
+        }
+
+        .card-title {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+
+            color: var(--muted);
+
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            line-height: 1.7;
+        }
+
+        /* -----------------------------
+   STATS
+----------------------------- */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+
+            margin: 25px 0;
+        }
+
+        .stat {
+            background: #f8f4ed;
+            border-radius: 15px;
+            padding: 15px 8px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 20px;
+        }
+
+        .stat span {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* -----------------------------
+   EVIDENCE
+----------------------------- */
+
+        .evidence {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .evidence-item {
+            padding: 15px;
+            background: #faf7f2;
+            border-radius: 12px;
+
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            opacity: 0;
+            transform: translateX(-15px);
+        }
+
+        .evidence-item.show {
+            animation: evidenceIn .5s forwards;
+        }
+
+        .check {
+            width: 28px;
+            height: 28px;
+
+            border-radius: 50%;
+
+            display: grid;
+            place-items: center;
+
+            background: var(--peach);
+        }
+
+        /* -----------------------------
+   VERDICT
+----------------------------- */
+
+        .verdict {
+            font-size: 70px;
+            margin-bottom: 15px;
+
+            animation:
+                bounce .8s ease;
+        }
+
+        .guilty {
+            color: var(--rose);
+            font-weight: 800;
+            font-size: 38px;
+            margin-bottom: 20px;
+        }
+
+        /* -----------------------------
+   APOLOGY
+----------------------------- */
+
+        .apology-card {
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .heart {
+            font-size: 45px;
+            margin-bottom: 20px;
+
+            animation:
+                heartbeat 1.5s infinite;
+        }
+
+        .apology-text {
+            font-size: 19px;
+            line-height: 1.8;
+        }
+
+        .signature {
+            margin-top: 25px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* -----------------------------
+   CHOICE
+----------------------------- */
+
+        .choice-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .suffer {
+            background: var(--navy);
+            color: white;
+        }
+
+        .accept {
+            background: var(--matcha);
+            color: #25351d;
+        }
+
+        /* -----------------------------
+   SUCCESS
+----------------------------- */
+
+        .success-icon {
+            font-size: 75px;
+
+            animation:
+                successPop .8s ease;
+        }
+
+        .reward {
+            margin: 25px 0;
+
+            background: #edf4e6;
+
+            padding: 20px;
+
+            border-radius: 20px;
+        }
+
+        .reward strong {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        /* -----------------------------
+   SECRET ENDING
+----------------------------- */
+
+        .secret {
+            margin-top: 25px;
+
+            color: var(--muted);
+            font-size: 13px;
+
+            cursor: pointer;
+
+            text-decoration: underline;
+        }
+
+        .secret-message {
+            display: none;
+
+            margin-top: 20px;
+
+            font-size: 18px;
+            line-height: 1.7;
+
+            animation: fadeIn .8s ease;
+        }
+
+        /* -----------------------------
+   CONFETTI
+----------------------------- */
+
+        .confetti {
+            position: fixed;
+
+            width: 8px;
+            height: 8px;
+
+            pointer-events: none;
+
+            animation: confettiFall 2.5s linear forwards;
+        }
+
+        /* -----------------------------
+   ANIMATIONS
+----------------------------- */
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: .5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes evidenceIn {
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes bounce {
+
+            0% {
+                transform: scale(.5);
+            }
+
+            60% {
+                transform: scale(1.15);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            15% {
+                transform: scale(1.15);
+            }
+
+            30% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes successPop {
+
+            0% {
+                transform: scale(.2) rotate(-20deg);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.2) rotate(5deg);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes confettiFall {
+
+            from {
+                transform:
+                    translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+
+            to {
+                transform:
+                    translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* -----------------------------
+   MOBILE
+----------------------------- */
+
+        @media(max-width:500px) {
+
+            .card {
+                padding: 25px 20px;
+            }
+
+            .stats {
+                gap: 6px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .choice-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <!-- =====================================================
+     SCREEN 1 — INTRO
+===================================================== -->
+
+    <section class="screen active" id="intro">
+
+        <div class="intro-box">
+
+            <div class="classified">
+                // CLASSIFIED TRANSMISSION //
+            </div>
+
+            <div class="mission-icon">
+                🕵️‍♂️
+            </div>
+
+            <h1>
+                You have<br>
+                a new mission.
+            </h1>
+
+            <p class="intro-sub">
+                A highly classified situation has occurred.<br>
+                Mission Control requires your attention.
+            </p>
+
+            <button class="btn primary" onclick="startMission()">
+
+                ACCEPT TRANSMISSION →
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 2 — BRIEFING
+===================================================== -->
+
+    <section class="screen app" id="briefing">
+
+        <div class="content">
+
+            <div class="mission-number">
+                MISSION 03 // CLASSIFIED
+            </div>
+
+            <h2 class="title">
+                Operation:<br>
+                I Messed Up
+            </h2>
+
+            <p class="subtitle">
+                Mission Control has detected a minor incident
+                involving one particular idiot.
+            </p>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Mission Objective
+                </div>
+
+                <p>
+                    Investigate the situation, determine the
+                    appropriate level of stupidity involved,
+                    and deliver a proper apology.
+                </p>
+
+                <div class="stats">
+
+                    <div class="stat">
+                        <strong>01</strong>
+                        <span>SUSPECT</span>
+                    </div>
+
+                    <div class="stat">
+                        <strong>03</strong>
+                        <span>CLUES</span>
+                    </div>
+
+                    <div class="stat">
+                        <strong>∞</strong>
+                        <span>OVERTHINKING</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button class="btn primary" onclick="showScreen('investigation')">
+
+                BEGIN INVESTIGATION →
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 3 — INVESTIGATION
+===================================================== -->
+
+    <section class="screen app" id="investigation">
+
+        <div class="content">
+
+            <div class="mission-number">
+                PHASE 01 // INVESTIGATION
+            </div>
+
+            <h2 class="title">
+                The Evidence
+            </h2>
+
+            <p class="subtitle">
+                Mission Control has reviewed the available evidence.
+            </p>
+
+
+            <div class="card">
+
+                <div class="evidence">
+
+                    <div class="evidence-item">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Exhibit A</strong><br>
+                            <small>
+                                Suspect overthought the situation.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="evidence-item">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Exhibit B</strong><br>
+                            <small>
+                                Suspect made things unnecessarily awkward.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="evidence-item">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Exhibit C</strong><br>
+                            <small>
+                                Suspect eventually realized it.
+                            </small>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button class="btn primary" onclick="showVerdict()">
+
+                REVIEW VERDICT →
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 4 — VERDICT
+===================================================== -->
+
+    <section class="screen app" id="verdict">
+
+        <div class="content">
+
+            <div class="mission-number">
+                PHASE 02 // VERDICT
+            </div>
+
+            <div class="verdict">
+                ⚖️
+            </div>
+
+            <div class="guilty">
+                GUILTY.
+            </div>
+
+            <p class="subtitle">
+                After careful consideration,<br>
+                the suspect has been found guilty of<br>
+                <strong>being a little stupid.</strong>
+            </p>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Recommended Sentence
+                </div>
+
+                <p>
+                    A sincere apology, followed by
+                    returning to normal programming.
+                </p>
+
+            </div>
+
+
+            <button class="btn primary" onclick="showScreen('apology')">
+
+                PROCEED TO APOLOGY →
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 5 — APOLOGY
+===================================================== -->
+
+    <section class="screen app" id="apology">
+
+        <div class="content">
+
+            <div class="mission-number">
+                PHASE 03 // FINAL STATEMENT
+            </div>
+
+
+            <div class="card apology-card">
+
+                <div class="heart">
+                    🫠
+                </div>
+
+                <p class="apology-text">
+
+                    Okay...
+
+                    <br><br>
+
+                    I think I was a little stupid the other day.
+
+                    <br><br>
+
+                    So I'm sorry. ❤️
+
+                    <br><br>
+
+                    No dramatic speech.
+                    No 47-slide PowerPoint presentation.
+
+                    <br><br>
+
+                    Just a tiny apology from me.
+
+                </p>
+
+                <div class="signature">
+                    — The idiot currently writing this website
+                </div>
+
+            </div>
+
+
+            <button class="btn primary" onclick="showScreen('choice')">
+
+                CONTINUE →
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 6 — CHOICE
+===================================================== -->
+
+    <section class="screen app" id="choice">
+
+        <div class="content">
+
+            <div class="mission-number">
+                FINAL DECISION
+            </div>
+
+            <h2 class="title">
+                Your move.
+            </h2>
+
+            <p class="subtitle">
+                Mission Control requires a response.
+            </p>
+
+
+            <div class="choice-buttons">
+
+                <button class="btn accept" onclick="completeMission()">
+
+                    ACCEPT APOLOGY ☕️
+
+                </button>
+
+
+                <button class="btn suffer" onclick="makeHimSuffer()">
+
+                    MAKE HIM SUFFER 😈
+
+                </button>
+
+            </div>
+
+
+            <div id="sufferMessage" style="
+                display:none;
+                margin-top:25px;
+                line-height:1.7;
+            ">
+
+                <strong>
+                    Excellent choice. 😭
+                </strong>
+
+                <br><br>
+
+                Punishment upgraded.
+
+                <br>
+
+                <strong>
+                    You got an upgrade from just a matcha to matcha with ice cream and sunflowers!
+                </strong>
+
+                <br><br>
+
+                <button class="btn primary" onclick="completeMission()">
+
+                    ACCEPT SENTENCE →
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+     SCREEN 7 — COMPLETE
+===================================================== -->
+
+    <section class="screen app" id="complete">
+
+        <div class="content">
+
+            <div class="success-icon">
+                🎉
+            </div>
+
+            <div class="mission-number">
+                MISSION STATUS
+            </div>
+
+            <h2 class="title">
+                COMPLETE.
+            </h2>
+
+            <p class="subtitle">
+                Mission successfully completed.
+            </p>
+
+
+            <div class="reward">
+
+                <strong>
+                    ☕️ REWARD UNLOCKED
+                </strong>
+
+                One matcha.
+
+                <br>
+
+                <small>
+                    Redeemable in person.
+                </small>
+
+            </div>
+
+
+            <div class="card">
+
+                <p style="text-align:center;">
+
+                    Okay, I'm done being stupid now. 😌
+
+                    <br><br>
+
+                    <strong>
+                        See you soon.
+                    </strong>
+
+                </p>
+
+            </div>
+
+
+            <div class="secret" onclick="revealSecret()">
+
+                Psst... there's a classified message.
+
+            </div>
+
+
+            <div class="secret-message" id="secretMessage">
+
+                You were not supposed to find this.
+
+                <br><br>
+
+                But since you're here...
+
+                <br><br>
+
+                You're kinda worth building a whole
+                ridiculous website for. 🫣
+                Sorry I can't spray my perfume on this mission LOL!
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <script>
+
+        /* ==========================================
+           SCREEN NAVIGATION
+        ========================================== */
+
+        function showScreen(id) {
+
+            document
+                .querySelectorAll(".screen")
+                .forEach(screen => {
+
+                    screen.classList.remove("active");
+
+                });
+
+            setTimeout(() => {
+
+                document
+                    .getElementById(id)
+                    .classList.add("active");
+
+            }, 100);
+
+        }
+
+
+        /* ==========================================
+           START
+        ========================================== */
+
+        function startMission() {
+
+            showScreen("briefing");
+
+        }
+
+
+        /* ==========================================
+           INVESTIGATION ANIMATION
+        ========================================== */
+
+        function showVerdict() {
+
+            showScreen("verdict");
+
+        }
+
+
+        /* ==========================================
+           "MAKE HIM SUFFER"
+        ========================================== */
+
+        function makeHimSuffer() {
+
+            const message =
+                document.getElementById("sufferMessage");
+
+            message.style.display = "block";
+
+        }
+
+
+        /* ==========================================
+           COMPLETE MISSION
+        ========================================== */
+
+        function completeMission() {
+
+            showScreen("complete");
+
+            createConfetti();
+
+        }
+
+
+        /* ==========================================
+           SECRET MESSAGE
+        ========================================== */
+
+        function revealSecret() {
+
+            const message =
+                document.getElementById("secretMessage");
+
+            message.style.display = "block";
+
+        }
+
+
+        /* ==========================================
+           CONFETTI
+        ========================================== */
+
+        function createConfetti() {
+
+            const symbols = [
+                "♥",
+                "✦",
+                "•",
+                "✿",
+                "★"
+            ];
+
+            for (let i = 0; i < 45; i++) {
+
+                const piece =
+                    document.createElement("div");
+
+                piece.className = "confetti";
+
+                piece.innerText =
+                    symbols[
+                    Math.floor(
+                        Math.random() * symbols.length
+                    )
+                    ];
+
+                piece.style.left =
+                    Math.random() * 100 + "vw";
+
+                piece.style.top = "-20px";
+
+                piece.style.fontSize =
+                    (Math.random() * 12 + 8) + "px";
+
+                piece.style.animationDuration =
+                    (Math.random() * 1.5 + 2) + "s";
+
+                piece.style.animationDelay =
+                    Math.random() * .5 + "s";
+
+                piece.style.color =
+                    [
+                        "#F6B89C",
+                        "#A8C686",
+                        "#E89A9A",
+                        "#E7C873"
+                    ][
+                    Math.floor(Math.random() * 4)
+                    ];
+
+                document.body.appendChild(piece);
+
+
+                setTimeout(() => {
+
+                    piece.remove();
+
+                }, 4000);
+
+            }
+
+        }
+
+
+        /* ==========================================
+           EVIDENCE SEQUENCE
+        ========================================== */
+
+        const observer =
+            new MutationObserver(() => {
+
+                if (
+                    document
+                        .getElementById("investigation")
+                        .classList
+                        .contains("active")
+                ) {
+
+                    const items =
+                        document.querySelectorAll(
+                            ".evidence-item"
+                        );
+
+                    items.forEach((item, index) => {
+
+                        setTimeout(() => {
+
+                            item.classList.add("show");
+
+                        }, index * 500);
+
+                    });
+
+                }
+
+            });
+
+
+        observer.observe(
+            document.body,
+            {
+                attributes: true,
+                subtree: true,
+                attributeFilter: ["class"]
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
